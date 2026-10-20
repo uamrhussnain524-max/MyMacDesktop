@@ -2,181 +2,772 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MyMacDesktop</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MyMac Dynamic Island</title>
 
 <style>
-* {
-    box-sizing: border-box;
+:root {
+    --island: #050506;
+    --glass: rgba(24, 24, 28, .78);
+    --border: rgba(255,255,255,.13);
+    --text: #f7f7fa;
+    --muted: #9999a4;
+    --green: #9be8b0;
 }
+
+* { box-sizing: border-box; }
 
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
-    color: white;
-    background: linear-gradient(135deg, #10172f, #35205b, #071a32);
-    height: 100vh;
+    min-height: 100vh;
     overflow: hidden;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 Arial, sans-serif;
+    background:
+        radial-gradient(ellipse at 15% 15%, #554087 0, transparent 38%),
+        radial-gradient(ellipse at 90% 75%, #153d64 0, transparent 38%),
+        linear-gradient(145deg, #151524, #090b14 60%, #101522);
 }
 
-.menubar {
-    height: 35px;
-    background: rgba(15, 15, 20, 0.85);
+/* Top menu bar */
+.topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 34px;
+    padding: 0 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 18px;
-    font-size: 13px;
+    background: rgba(8,8,12,.34);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    font-size: 12px;
+    color: rgba(255,255,255,.88);
 }
 
-.notch {
-    position: absolute;
-    top: 0;
+.menu-left, .menu-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.apple { font-size: 17px; }
+
+/* Dynamic Island */
+.island-wrap {
+    position: fixed;
+    top: 9px;
     left: 50%;
     transform: translateX(-50%);
-    width: 180px;
-    height: 32px;
-    background: #050505;
-    border-radius: 0 0 18px 18px;
+    z-index: 100;
 }
 
-.desktop {
-    height: calc(100vh - 35px);
+.island {
+    position: relative;
+    width: 180px;
+    height: 38px;
+    overflow: hidden;
+    border-radius: 24px;
+    background: rgba(0,0,0,.94);
+    border: 1px solid rgba(255,255,255,.16);
+    box-shadow:
+        0 5px 22px rgba(0,0,0,.35),
+        inset 0 1px 0 rgba(255,255,255,.08);
+    cursor: pointer;
+    transition:
+        width .55s cubic-bezier(.2,.85,.2,1),
+        height .55s cubic-bezier(.2,.85,.2,1),
+        border-radius .4s ease,
+        box-shadow .4s ease;
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+}
+
+.island:hover {
+    box-shadow: 0 8px 30px rgba(0,0,0,.48),
+                0 0 0 1px rgba(255,255,255,.07);
+}
+
+.island.expanded {
+    width: min(370px, calc(100vw - 28px));
+    height: 300px;
+    border-radius: 29px;
+}
+
+.island-top {
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    gap: 10px;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #78e7a1;
+    box-shadow: 0 0 10px rgba(120,231,161,.6);
+}
+
+.island-summary {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+#clock {
+    font-variant-numeric: tabular-nums;
+}
+
+.chevron {
+    color: #888;
+    font-size: 11px;
+    transition: transform .35s;
+}
+
+.expanded .chevron {
+    transform: rotate(180deg);
+}
+
+.island-content {
+    padding: 7px 16px 17px;
+    opacity: 0;
+    transform: translateY(-7px);
+    transition: opacity .25s ease .05s, transform .35s ease;
+    pointer-events: none;
+}
+
+.expanded .island-content {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.tabs {
+    display: flex;
+    gap: 7px;
+    padding: 2px 0 15px;
+}
+
+.tab {
+    flex: 1;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.055);
+    color: #aaaab5;
+    border-radius: 12px;
+    padding: 9px 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.tab.active {
+    background: rgba(255,255,255,.15);
+    color: white;
+    border-color: rgba(255,255,255,.15);
+}
+
+.panel { display: none; }
+.panel.active { display: block; animation: reveal .3s ease; }
+
+@keyframes reveal {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Music player */
+.music-card {
+    display: flex;
+    gap: 13px;
+    align-items: center;
+    margin: 1px 0 15px;
+}
+
+.album {
+    width: 69px;
+    height: 69px;
+    border-radius: 15px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    font-size: 31px;
+    background: linear-gradient(140deg, #b47aff, #4e40a4 55%, #1a2449);
+    box-shadow: 0 4px 20px #6b4bb333;
+}
+
+.track-info { min-width: 0; }
+.track-title { font-weight: 650; font-size: 13px; }
+.track-artist { color: var(--muted); font-size: 11px; margin-top: 5px; }
+
+.equalizer {
+    height: 15px;
+    display: flex;
+    align-items: end;
+    gap: 3px;
+    margin-top: 8px;
+}
+
+.equalizer i {
+    width: 3px;
+    height: 5px;
+    border-radius: 4px;
+    background: var(--green);
+}
+
+.playing .equalizer i { animation: wave .65s infinite alternate; }
+.playing .equalizer i:nth-child(2) { animation-delay: .2s; }
+.playing .equalizer i:nth-child(3) { animation-delay: .4s; }
+.playing .equalizer i:nth-child(4) { animation-delay: .1s; }
+
+@keyframes wave {
+    to { height: 14px; }
+}
+
+.progress {
+    height: 3px;
+    background: rgba(255,255,255,.15);
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 8px 0 5px;
+}
+
+.progress-fill {
+    width: 0%;
+    height: 100%;
+    background: white;
+}
+
+.track-times {
+    display: flex;
+    justify-content: space-between;
+    color: #85858e;
+    font-size: 9px;
+}
+
+.music-buttons {
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-direction: column;
+    gap: 23px;
+    margin-top: 11px;
 }
 
-.welcome {
+.music-buttons button {
+    color: white;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-size: 17px;
+    padding: 3px;
+}
+
+.music-buttons .play {
+    width: 39px;
+    height: 39px;
+    border-radius: 50%;
+    background: #f5f5f7;
+    color: #111;
+    font-size: 17px;
+}
+
+.hint {
+    color: #686872;
+    font-size: 10px;
     text-align: center;
-    margin-bottom: 35px;
+    margin-top: 12px;
+}
+
+/* Calendar */
+.calendar-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 3px 0 14px;
+}
+
+.calendar-head strong { font-size: 14px; }
+
+.calendar-head button {
+    background: rgba(255,255,255,.08);
+    border: 0;
+    border-radius: 9px;
+    color: white;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    text-align: center;
+}
+
+.day-name {
+    color: #85858e;
+    font-size: 10px;
+    padding-bottom: 5px;
+}
+
+.day {
+    display: grid;
+    place-items: center;
+    height: 27px;
+    border-radius: 9px;
+    font-size: 11px;
+}
+
+.day.today {
+    color: #111;
+    background: white;
+    font-weight: 800;
+}
+
+.calendar-note {
+    margin-top: 12px;
+    color: #aaaab5;
+    font-size: 11px;
+}
+
+/* Quick controls */
+.control-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+}
+
+.control-button {
+    min-height: 61px;
+    padding: 11px;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 15px;
+    color: white;
+    background: rgba(255,255,255,.075);
+    text-align: left;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.control-button:hover,
+.control-button.on {
+    background: rgba(103,140,255,.25);
+    border-color: rgba(135,157,255,.25);
+}
+
+.control-icon { font-size: 18px; }
+.control-label { display: block; margin-top: 6px; font-size: 11px; }
+
+.brightness {
+    margin-top: 12px;
+    background: rgba(255,255,255,.09);
+    border-radius: 12px;
+    padding: 10px;
+    font-size: 11px;
+}
+
+.brightness input { width: 100%; margin-top: 9px; accent-color: white; }
+
+/* Desktop */
+.desktop-content {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 80px 20px 100px;
 }
 
 .welcome h1 {
-    font-size: 38px;
+    font-size: clamp(28px, 5vw, 45px);
+    letter-spacing: -1.6px;
     margin-bottom: 10px;
 }
 
 .welcome p {
-    color: #c7c8e8;
+    color: #c1c3d8;
+    font-size: 14px;
 }
 
+.desktop-clock {
+    font-size: 12px;
+    color: #9b9db4;
+    margin-top: 20px;
+}
+
+/* Dock */
 .dock {
     position: fixed;
-    bottom: 18px;
+    bottom: 17px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 12px;
-    padding: 12px 18px;
-    background: rgba(255, 255, 255, 0.16);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 22px;
+    align-items: end;
+    gap: 9px;
+    padding: 10px 13px;
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 23px;
+    background: rgba(180,180,205,.17);
+    backdrop-filter: blur(30px) saturate(160%);
+    -webkit-backdrop-filter: blur(30px) saturate(160%);
+    box-shadow: 0 12px 35px rgba(0,0,0,.22);
 }
 
-.app {
-    width: 52px;
-    height: 52px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 28px;
-    background: rgba(255,255,255,0.14);
+.dock-app {
+    position: relative;
+    width: 48px;
+    height: 48px;
     border-radius: 15px;
+    display: grid;
+    place-items: center;
+    font-size: 25px;
+    background: linear-gradient(145deg, rgba(255,255,255,.19),
+                                        rgba(255,255,255,.07));
+    border: 1px solid rgba(255,255,255,.1);
     cursor: pointer;
-    transition: 0.2s;
+    transition: transform .2s cubic-bezier(.2,.8,.2,1);
 }
 
-.app:hover {
-    transform: translateY(-10px) scale(1.12);
-    background: rgba(255,255,255,0.3);
+.dock-app:hover { transform: translateY(-9px) scale(1.13); }
+
+.dock-app::after {
+    content: attr(data-name);
+    position: absolute;
+    bottom: 61px;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    white-space: nowrap;
+    font-size: 10px;
+    padding: 6px 9px;
+    border-radius: 8px;
+    background: rgba(20,20,25,.85);
+    backdrop-filter: blur(15px);
+    opacity: 0;
+    pointer-events: none;
+    transition: .2s;
 }
 
-.control {
-    position: fixed;
-    right: 20px;
-    top: 55px;
-    width: 230px;
-    padding: 18px;
-    background: rgba(20,20,35,0.92);
-    border: 1px solid #777;
-    border-radius: 20px;
-    display: none;
+.dock-app:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
 }
 
-.control button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 8px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
+@media(max-width:420px) {
+    .topbar { padding: 0 9px; }
+    .menu-left { gap: 7px; }
+    .menu-right { gap: 7px; }
+    .dock { gap: 6px; padding: 8px; }
+    .dock-app { width: 43px; height: 43px; }
 }
-
 </style>
 </head>
 
 <body>
 
-<div class="menubar">
-    <span>🍎 MyMac</span>
-    <span id="clock">Loading...</span>
-    <span onclick="toggleControl()" style="cursor:pointer">☰ Control Centre</span>
-</div>
+<header class="topbar">
+    <div class="menu-left">
+        <span class="apple">●</span>
+        <strong>MyMac</strong>
+        <span>Desktop</span>
+    </div>
+    <div class="menu-right">
+        <span id="topDate"></span>
+        <span id="topTime"></span>
+    </div>
+</header>
 
-<div class="notch"></div>
+<div class="island-wrap">
+    <div class="island" id="island" role="button"
+         tabindex="0" aria-expanded="false"
+         aria-label="Open Dynamic Island">
+        <div class="island-top">
+            <div class="island-summary">
+                <span class="live-dot"></span>
+                <span id="clock">Loading...</span>
+            </div>
+            <span class="chevron" id="chevron">⌄</span>
+        </div>
 
-<div class="desktop">
-    <div class="welcome">
-        <h1>Welcome to MyMac ✨</h1>
-        <p>Your desktop, your style.</p>
-        <p>Made with ❤️ by you</p>
+        <div class="island-content">
+            <div class="tabs">
+                <button class="tab active" data-panel="music">♫ Music</button>
+                <button class="tab" data-panel="calendar">▦ Calendar</button>
+                <button class="tab" data-panel="controls">☼ Controls</button>
+            </div>
+
+            <section class="panel active" id="music">
+                <div class="music-card">
+                    <div class="album" id="album">♫</div>
+                    <div class="track-info">
+                        <div class="track-title" id="trackTitle">Midnight Dreams</div>
+                        <div class="track-artist" id="trackArtist">MyMac Player · Demo</div>
+                        <div class="equalizer playing" id="equalizer">
+                            <i></i><i></i><i></i><i></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+                <div class="track-times"><span id="elapsed">0:00</span><span id="duration">3:30</span></div>
+
+                <div class="music-buttons">
+                    <button id="prev" aria-label="Previous track">◀|</button>
+                    <button class="play" id="play" aria-label="Play or pause">Ⅱ</button>
+                    <button id="next" aria-label="Next track">|▶</button>
+                </div>
+                <div class="hint">Interactive demo player</div>
+            </section>
+
+            <section class="panel" id="calendar">
+                <div class="calendar-head">
+                    <button id="prevMonth">‹</button>
+                    <strong id="monthTitle"></strong>
+                    <button id="nextMonth">›</button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+                <div class="calendar-note" id="calendarNote"></div>
+            </section>
+
+            <section class="panel" id="controls">
+                <div class="control-grid">
+                    <button class="control-button on" data-control="wifi">
+                        <span class="control-icon">⌁</span>
+                        <span class="control-label">Wi-Fi · Visual</span>
+                    </button>
+                    <button class="control-button" data-control="bluetooth">
+                        <span class="control-icon">ᛒ</span>
+                        <span class="control-label">Bluetooth · Visual</span>
+                    </button>
+                    <button class="control-button on" data-control="focus">
+                        <span class="control-icon">☾</span>
+                        <span class="control-label">Focus</span>
+                    </button>
+                    <button class="control-button" id="themeButton">
+                        <span class="control-icon">◐</span>
+                        <span class="control-label">Change Theme</span>
+                    </button>
+                </div>
+                <div class="brightness">
+                    <span>☼ &nbsp; Screen overlay brightness</span>
+                    <input id="brightness" type="range" min="65" max="120" value="100">
+                </div>
+            </section>
+        </div>
     </div>
 </div>
 
-<div class="dock">
-    <div class="app" onclick="alert('Welcome to MyMac!')">🍎</div>
-    <div class="app" onclick="openSite('https://www.google.com')">🌐</div>
-    <div class="app" onclick="openSite('https://www.youtube.com')">▶️</div>
-    <div class="app" onclick="openSite('https://github.com')">💻</div>
-    <div class="app" onclick="toggleControl()">⚙️</div>
-</div>
+<main class="desktop-content">
+    <div class="welcome">
+        <h1>Welcome to MyMac ✨</h1>
+        <p>A little island. A whole new desktop feeling.</p>
+        <p>Designed by you. Powered by the web.</p>
+        <div class="desktop-clock" id="fullDate"></div>
+    </div>
+</main>
 
-<div class="control" id="control">
-    <h3>Control Centre</h3>
-    <button onclick="toggleLight()">🌗 Change Appearance</button>
-    <button onclick="alert('MyMac Desktop is running!')">💻 About MyMac</button>
-    <button onclick="toggleControl()">✖ Close</button>
-</div>
+<nav class="dock" aria-label="App Dock">
+    <button class="dock-app" data-name="MyMac" onclick="toggleIsland()">🍎</button>
+    <button class="dock-app" data-name="Music" onclick="openPanel('music')">♫</button>
+    <button class="dock-app" data-name="Calendar" onclick="openPanel('calendar')">▦</button>
+    <button class="dock-app" data-name="Controls" onclick="openPanel('controls')">⚙</button>
+    <button class="dock-app" data-name="Browser" onclick="window.open('https://www.google.com','_blank')">🌐</button>
+</nav>
 
 <script>
+const island = document.getElementById("island");
+let expanded = false;
+
+function toggleIsland(force) {
+    expanded = typeof force === "boolean" ? force : !expanded;
+    island.classList.toggle("expanded", expanded);
+    island.setAttribute("aria-expanded", String(expanded));
+}
+
+island.addEventListener("click", event => {
+    if (event.target.closest("button")) return;
+    toggleIsland();
+});
+
+island.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        toggleIsland();
+    }
+});
+
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape") toggleIsland(false);
+});
+
+function openPanel(name) {
+    toggleIsland(true);
+    showPanel(name);
+}
+
+document.querySelectorAll(".tab").forEach(button => {
+    button.addEventListener("click", () => showPanel(button.dataset.panel));
+});
+
+function showPanel(name) {
+    document.querySelectorAll(".tab").forEach(tab => {
+        tab.classList.toggle("active", tab.dataset.panel === name);
+    });
+    document.querySelectorAll(".panel").forEach(panel => {
+        panel.classList.toggle("active", panel.id === name);
+    });
+}
+
 function updateClock() {
-    document.getElementById("clock").textContent =
-        new Date().toLocaleString();
+    const now = new Date();
+    const time = now.toLocaleTimeString([], {
+        hour: "2-digit", minute: "2-digit"
+    });
+    const date = now.toLocaleDateString([], {
+        weekday: "short", month: "short", day: "numeric"
+    });
+    document.getElementById("clock").textContent = time;
+    document.getElementById("topTime").textContent = time;
+    document.getElementById("topDate").textContent = date;
+    document.getElementById("fullDate").textContent =
+        now.toLocaleString([], {
+            weekday: "long", year: "numeric", month: "long",
+            day: "numeric", hour: "2-digit", minute: "2-digit"
+        });
 }
-
-setInterval(updateClock, 1000);
 updateClock();
+setInterval(updateClock, 1000);
 
-function toggleControl() {
-    const panel = document.getElementById("control");
-    panel.style.display =
-        panel.style.display === "block" ? "none" : "block";
-}
+/* Calendar */
+let shownMonth = new Date();
+function renderCalendar() {
+    const year = shownMonth.getFullYear();
+    const month = shownMonth.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    document.getElementById("monthTitle").textContent =
+        shownMonth.toLocaleDateString([], { month: "long", year: "numeric" });
 
-function toggleLight() {
-    document.body.style.background =
-        document.body.style.background.includes("rgb(240") ?
-        "linear-gradient(135deg, #10172f, #35205b, #071a32)" :
-        "rgb(240, 240, 245)";
-}
+    const grid = document.getElementById("calendarGrid");
+    grid.innerHTML = "";
 
-function openSite(url) {
-    window.open(url, "_blank");
+    ["Su","Mo","Tu","We","Th","Fr","Sa"].forEach(name => {
+        const cell = document.createElement("div");
+        cell.className = "day-name";
+        cell.textContent = name;
+        grid.appendChild(cell);
+    });
+
+    for (let i = 0; i < firstDay; i++) {
+        grid.appendChild(document.createElement("div"));
+    }
+
+    for (let day = 1; day <= totalDays; day++) {
+        const cell = document.createElement("div");
+        cell.className = "day";
+        cell.textContent = day;
+        if (day === today.getDate() &&
+            month === today.getMonth() &&
+            year === today.getFullYear()) {
+            cell.classList.add("today");
+        }
+        grid.appendChild(cell);
+    }
+
+    document.getElementById("calendarNote").textContent =
+        "Today · " + today.toLocaleDateString([], {
+            weekday: "long", month: "long", day: "numeric"
+        });
 }
+document.getElementById("prevMonth").onclick = () => {
+    shownMonth = new Date(shownMonth.getFullYear(), shownMonth.getMonth()-1, 1);
+    renderCalendar();
+};
+document.getElementById("nextMonth").onclick = () => {
+    shownMonth = new Date(shownMonth.getFullYear(), shownMonth.getMonth()+1, 1);
+    renderCalendar();
+};
+renderCalendar();
+
+/* Demo music controls: UI only, no external audio file */
+const tracks = [
+    { title: "Midnight Dreams", artist: "MyMac Player · Demo", icon: "♫", duration: 210 },
+    { title: "Neon Skyline", artist: "MyMac Player · Demo", icon: "✦", duration: 185 },
+    { title: "Quiet Motion", artist: "MyMac Player · Demo", icon: "☾", duration: 202 }
+];
+let trackIndex = 0;
+let playing = true;
+let elapsed = 0;
+
+function renderTrack() {
+    const track = tracks[trackIndex];
+    document.getElementById("trackTitle").textContent = track.title;
+    document.getElementById("trackArtist").textContent = track.artist;
+    document.getElementById("album").textContent = track.icon;
+    document.getElementById("duration").textContent = formatTime(track.duration);
+    elapsed = 0;
+    renderProgress();
+}
+function formatTime(seconds) {
+    return Math.floor(seconds/60) + ":" + String(seconds%60).padStart(2,"0");
+}
+function renderProgress() {
+    const duration = tracks[trackIndex].duration;
+    document.getElementById("elapsed").textContent = formatTime(elapsed);
+    document.getElementById("progressFill").style.width =
+        (elapsed/duration*100) + "%";
+}
+function setPlaying(value) {
+    playing = value;
+    document.getElementById("play").textContent = playing ? "Ⅱ" : "▶";
+    document.getElementById("equalizer").classList.toggle("playing", playing);
+}
+document.getElementById("play").onclick = () => setPlaying(!playing);
+document.getElementById("next").onclick = () => {
+    trackIndex = (trackIndex + 1) % tracks.length;
+    renderTrack();
+};
+document.getElementById("prev").onclick = () => {
+    trackIndex = (trackIndex - 1 + tracks.length) % tracks.length;
+    renderTrack();
+};
+setInterval(() => {
+    if (!playing) return;
+    elapsed++;
+    if (elapsed >= tracks[trackIndex].duration) {
+        trackIndex = (trackIndex + 1) % tracks.length;
+        renderTrack();
+    } else {
+        renderProgress();
+    }
+}, 1000);
+
+/* Visual-only controls: browser cannot toggle real Wi-Fi/Bluetooth */
+document.querySelectorAll("[data-control]").forEach(button => {
+    button.onclick = () => button.classList.toggle("on");
+});
+
+let lightMode = false;
+document.getElementById("themeButton").onclick = () => {
+    lightMode = !lightMode;
+    document.body.style.background = lightMode
+        ? "radial-gradient(ellipse at 20% 10%, #c4b6ee, transparent 45%), linear-gradient(135deg,#dce3f5,#a8b7d7)"
+        : "radial-gradient(ellipse at 15% 15%, #554087 0, transparent 38%), radial-gradient(ellipse at 90% 75%, #153d64 0, transparent 38%), linear-gradient(145deg, #151524, #090b14 60%, #101522)";
+    document.body.style.color = lightMode ? "#151525" : "#f7f7fa";
+};
+
+document.getElementById("brightness").oninput = event => {
+    document.body.style.filter = `brightness(${event.target.value}%)`;
+};
 </script>
-
 </body>
 </html>
