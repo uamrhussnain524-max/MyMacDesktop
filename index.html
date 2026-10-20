@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyMacDesktop</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: white;
+    background: linear-gradient(135deg, #10172f, #35205b, #071a32);
+    height: 100vh;
+    overflow: hidden;
+}
+
+.menubar {
+    height: 35px;
+    background: rgba(15, 15, 20, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    font-size: 13px;
+}
+
+.notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 180px;
+    height: 32px;
+    background: #050505;
+    border-radius: 0 0 18px 18px;
+}
+
+.desktop {
+    height: calc(100vh - 35px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.welcome {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.welcome h1 {
+    font-size: 38px;
+    margin-bottom: 10px;
+}
+
+.welcome p {
+    color: #c7c8e8;
+}
+
+.dock {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    padding: 12px 18px;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 22px;
+}
+
+.app {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 28px;
+    background: rgba(255,255,255,0.14);
+    border-radius: 15px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.app:hover {
+    transform: translateY(-10px) scale(1.12);
+    background: rgba(255,255,255,0.3);
+}
+
+.control {
+    position: fixed;
+    right: 20px;
+    top: 55px;
+    width: 230px;
+    padding: 18px;
+    background: rgba(20,20,35,0.92);
+    border: 1px solid #777;
+    border-radius: 20px;
+    display: none;
+}
+
+.control button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="menubar">
+    <span>🍎 MyMac</span>
+    <span id="clock">Loading...</span>
+    <span onclick="toggleControl()" style="cursor:pointer">☰ Control Centre</span>
+</div>
+
+<div class="notch"></div>
+
+<div class="desktop">
+    <div class="welcome">
+        <h1>Welcome to MyMac ✨</h1>
+        <p>Your desktop, your style.</p>
+        <p>Made with ❤️ by you</p>
+    </div>
+</div>
+
+<div class="dock">
+    <div class="app" onclick="alert('Welcome to MyMac!')">🍎</div>
+    <div class="app" onclick="openSite('https://www.google.com')">🌐</div>
+    <div class="app" onclick="openSite('https://www.youtube.com')">▶️</div>
+    <div class="app" onclick="openSite('https://github.com')">💻</div>
+    <div class="app" onclick="toggleControl()">⚙️</div>
+</div>
+
+<div class="control" id="control">
+    <h3>Control Centre</h3>
+    <button onclick="toggleLight()">🌗 Change Appearance</button>
+    <button onclick="alert('MyMac Desktop is running!')">💻 About MyMac</button>
+    <button onclick="toggleControl()">✖ Close</button>
+</div>
+
+<script>
+function updateClock() {
+    document.getElementById("clock").textContent =
+        new Date().toLocaleString();
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+
+function toggleControl() {
+    const panel = document.getElementById("control");
+    panel.style.display =
+        panel.style.display === "block" ? "none" : "block";
+}
+
+function toggleLight() {
+    document.body.style.background =
+        document.body.style.background.includes("rgb(240") ?
+        "linear-gradient(135deg, #10172f, #35205b, #071a32)" :
+        "rgb(240, 240, 245)";
+}
+
+function openSite(url) {
+    window.open(url, "_blank");
+}
+</script>
+
+</body>
+</html>
